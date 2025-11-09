@@ -1,45 +1,28 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Stage 1 — Build the Vite app
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy the rest of the project including .env
 COPY . .
 
-# Build the application
+# Make sure .env is available at build time
+# Vite automatically picks up VITE_* variables from it
 RUN npm run build
 
-# Production stage
+# Stage 2 — Serve with Nginx
 FROM nginx:alpine
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
 
-# Copy nginx configuration (optional - for SPA routing)
-RUN echo 'server { \
-    listen 80; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    # Cache static assets \
-    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy built files
+COPY --from=builder /app/dist ./
 
-# Expose port 80
+# Expose port
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
-
