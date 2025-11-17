@@ -110,6 +110,11 @@ const Login = () => {
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
+          <div className='text-xs bg-muted text-muted-foreground rounded p-2'>
+          <p>Dummy Credentials:</p>
+          <p>Email: vselukar2102@gmail.com</p>
+          <p>Password: Vinay@123</p>
+          </div>
         </CardContent>
       </Card>
     </div>
